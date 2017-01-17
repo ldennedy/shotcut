@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2011-2016 Meltytech, LLC
+ * Copyright (c) 2011-2017 Meltytech, LLC
  * Author: Dan Dennedy <dan@dennedy.org>
  *
  * This program is free software: you can redistribute it and/or modify
@@ -652,9 +652,12 @@ void MainWindow::setupSettingsMenu()
     QAction* a = new QAction(QLocale::languageToString(QLocale::Catalan), m_languagesGroup);
     a->setCheckable(true);
     a->setData("ca");
-    a = new QAction(QLocale::languageToString(QLocale::Chinese), m_languagesGroup);
+    a = new QAction(QLocale::languageToString(QLocale::Chinese).append(" (China)"), m_languagesGroup);
     a->setCheckable(true);
-    a->setData("zh");
+    a->setData("zh_CN");
+    a = new QAction(QLocale::languageToString(QLocale::Chinese).append(" (Taiwan)"), m_languagesGroup);
+    a->setCheckable(true);
+    a->setData("zh_TW");
     a = new QAction(QLocale::languageToString(QLocale::Czech), m_languagesGroup);
     a->setCheckable(true);
     a->setData("cs");
@@ -968,13 +971,7 @@ QString MainWindow::removeFileScheme(QUrl &url)
 {
     QString path = url.url();
     if (url.scheme() == "file")
-        path = url.path();
-    if (path.length() > 2 && path.startsWith("///"))
-#ifdef Q_OS_WIN
-        path.remove(0, 3);
-#else
-        path.remove(0, 2);
-#endif
+        path = url.url(QUrl::PreferLocalFile);
     return path;
 }
 
@@ -1905,6 +1902,8 @@ void MainWindow::onProducerOpened()
 void MainWindow::onProducerChanged()
 {
     MLT.refreshConsumer();
+    if (playlist() && MLT.producer()->get_int(kPlaylistIndexProperty))
+        m_playlistDock->setUpdateButtonEnabled(true);
 }
 
 bool MainWindow::on_actionSave_triggered()
