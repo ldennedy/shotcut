@@ -26,6 +26,7 @@
 #include "shotcut_mlt_properties.h"
 #include <QScopedPointer>
 #include <QApplication>
+#include <qwidget.h>                //added
 #include <qmath.h>
 #include <QTimer>
 
@@ -1340,6 +1341,9 @@ void MultitrackModel::overwriteFromPlaylist(Mlt::Playlist& from, int trackIndex,
 
 void MultitrackModel::fadeIn(int trackIndex, int clipIndex, int duration)
 {
+    QWidget mouseTest;  //placeholder for a "blank widget" that can track mouse events
+                        //compiles but does not "read" anything
+
     int i = m_trackList.at(trackIndex).mlt_index;
     QScopedPointer<Mlt::Producer> track(m_tractor->track(i));
     if (track) {
@@ -1351,11 +1355,30 @@ void MultitrackModel::fadeIn(int trackIndex, int clipIndex, int duration)
 
             if (m_trackList[trackIndex].type == VideoTrackType) {
                 // Get video filter.
-                if (Settings.playerGPU())
-                    filter.reset(getFilter("fadeInMovit", info->producer));
-                else
-                    filter.reset(getFilter("fadeInBrightness", info->producer));
-    
+                if (Settings.playerGPU()) {                         //logic framework
+                    if (mouseTest.hasMouseTracking()) {             //the bool hasMouseTracking only returns true when the mouse is down
+                        filter.reset(getFilter("fadeInMovit", info->producer));
+                    } else {
+                        if (duration < 2) {
+                            qDebug() << "delete video filter";                          //insert deletion here
+                            filter.reset(getFilter("fadeInMovit", info->producer));     //remove this when deletion call works
+                        } else {
+                            filter.reset(getFilter("fadeInMovit", info->producer));
+                        }
+                    }
+                } else {
+                    if (mouseTest.hasMouseTracking()) {
+                        filter.reset(getFilter("fadeInBrightness", info->producer));
+                    } else {
+                        if (duration < 2) {
+                            qDebug() << "delete video filter";                               //insert deletion here
+                            filter.reset(getFilter("fadeInBrightness", info->producer));     //remove this when deletion call works
+                        } else {
+                            filter.reset(getFilter("fadeInBrightness", info->producer));
+                        }
+                    }
+                }
+
                 // Add video filter if needed.
                 if (!filter) {
                     if (Settings.playerGPU()) {
@@ -1389,7 +1412,16 @@ void MultitrackModel::fadeIn(int trackIndex, int clipIndex, int duration)
             }
 
             // Get audio filter.
-            filter.reset(getFilter("fadeInVolume", info->producer));
+            if (mouseTest.hasMouseTracking()) {
+                filter.reset(getFilter("fadeInVolume", info->producer));
+            } else {
+                if (duration < 2) {
+                    qDebug() << "delete audio filter";                               //insert deletion here
+                    filter.reset(getFilter("fadeInVolume", info->producer));         //remove this when deletion call works
+                } else {
+                    filter.reset(getFilter("fadeInVolume", info->producer));
+                }
+            }
 
             // Add audio filter if needed.
             if (!filter) {
@@ -1415,6 +1447,8 @@ void MultitrackModel::fadeIn(int trackIndex, int clipIndex, int duration)
 
 void MultitrackModel::fadeOut(int trackIndex, int clipIndex, int duration)
 {
+    QWidget mouseTest;
+
     int i = m_trackList.at(trackIndex).mlt_index;
     QScopedPointer<Mlt::Producer> track(m_tractor->track(i));
     if (track) {
@@ -1426,11 +1460,30 @@ void MultitrackModel::fadeOut(int trackIndex, int clipIndex, int duration)
 
             if (m_trackList[trackIndex].type == VideoTrackType) {
                 // Get video filter.
-                if (Settings.playerGPU())
-                    filter.reset(getFilter("fadeOutMovit", info->producer));
-                else
-                    filter.reset(getFilter("fadeOutBrightness", info->producer));
-    
+                if (Settings.playerGPU()) {
+                    if (mouseTest.hasMouseTracking()) {
+                        filter.reset(getFilter("fadeOutMovit", info->producer));
+                    } else {
+                        if (duration < 2) {
+                            qDebug() << "delete video filter";                           //insert deletion here
+                            filter.reset(getFilter("fadeOutMovit", info->producer));     //remove this when deletion call works
+                        } else {
+                            filter.reset(getFilter("fadeOutMovit", info->producer));
+                        }
+                    }
+                } else {
+                    if (mouseTest.hasMouseTracking()) {
+                        filter.reset(getFilter("fadeOutBrightness", info->producer));
+                    } else {
+                        if (duration < 2) {
+                            qDebug() << "delete video filter";                                //insert deletion here
+                            filter.reset(getFilter("fadeOutBrightness", info->producer));     //remove this when deletion call works
+                        } else {
+                            filter.reset(getFilter("fadeOutBrightness", info->producer));
+                        }
+                    }
+                }
+
                 // Add video filter if needed.
                 if (!filter) {
                     if (Settings.playerGPU()) {
@@ -1464,7 +1517,16 @@ void MultitrackModel::fadeOut(int trackIndex, int clipIndex, int duration)
             }
 
             // Get audio filter.
-            filter.reset(getFilter("fadeOutVolume", info->producer));
+            if (mouseTest.hasMouseTracking()) {
+                filter.reset(getFilter("fadeOutVolume", info->producer));
+            } else {
+                if (duration < 2) {
+                    qDebug() << "delete audio filter";                               //insert deletion here
+                    filter.reset(getFilter("fadeOutVolume", info->producer));        //remove this when deletion call works
+                } else {
+                    filter.reset(getFilter("fadeOutVolume", info->producer));
+                }
+            }
 
             // Add audio filter if needed.
             if (!filter) {
